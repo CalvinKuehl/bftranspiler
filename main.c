@@ -6,12 +6,13 @@ int main(int argc, char* argv[]) {
 	FILE *outfile;
 	FILE *infile;
 	char givenchar;
-	char lastchar = 'd';
-	int jmpnum = 0;
+	char lastchar = 'a'; // doesn't matter what this is as long as it is not one of the brainfuck commands
+	int ejmpnum = 0;
+	int bjmpnum = 0;
 	int iternum = 1;
 	
 	// reset write file
-	outfile = fopen(argv[1], "w");
+	outfile = fopen(argv[1], "w");//make sure the file exists so remove() doesnt cause an error
 	fclose(outfile);
 	remove(argv[1]);
 	
@@ -21,10 +22,10 @@ int main(int argc, char* argv[]) {
 	// open read file (brainfuck)
 	infile = fopen(argv[2], "r");
 	
-	// get starter code for the assembly (defining main function, etc)
+	// write starter code for the assembly (defining main function, etc)
 	fprintf(outfile, "section .text\nglobal _start\n_start:\n\tinc rsp");
 	
-	// get the rest of the code (what is actually from the brainfuck coode)
+	// write the body of the code (what is actually compiled from the brainfuck coode)
 	givenchar = fgetc(infile);
 	do {
 		lastchar = givenchar;
@@ -85,11 +86,13 @@ int main(int argc, char* argv[]) {
 				}
 				break;
 			case '[': // begin loop
-				jmpnum++;
-				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tje ej%i\n\tbj%i:", jmpnum, jmpnum);
+				bjmpnum++;
+				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tje ej%i\n\tbj%i:", bjmpnum, bjmpnum);
+				ejmpnum=bjmpnum;
 				break;
 			case ']':
-				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tjnz bj%i\n\tej%i:", jmpnum, jmpnum);
+				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tjnz bj%i\n\tej%i:", ejmpnum, ejmpnum);
+				ejmpnum--;
 				break;
 			default:
 				break;
