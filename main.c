@@ -1,17 +1,38 @@
 #include <stdio.h>
+#include <stdint.h>
 // transcompiler for brainfuck to x86_64 assembly (linux system calls)
+
+struct stck {
+	int stackptr; // int is used to support negatives (for an empty stack)
+	uint8_t items[256]; // each item is an unsigned 8 bit integer, meaning that up to 256 unique values can be entered
+};
+
+typedef struct stck stack;
+
+void push(stack *s, uint8_t item) {
+	s->stackptr++;
+	s->items[s->stackptr] = item;
+}
+
+uint8_t pop(stack *s) {
+	s->stackptr--;
+	return s->items[s->stackptr+1];
+}
 
 int main(int argc, char* argv[]) {
 	// needed variables
 	FILE *outfile;
 	FILE *infile;
 	char givenchar;
-	char lastchar = 'd';
-	int jmpnum = 0;
+	char lastchar = 'a'; // doesn't matter what this is as long as it is not one of the brainfuck commands
+	int bjmpnum = 0;
+	int ejmpnum;
+	stack ejmpstack;
+	ejmpstack.stackptr = -1;
 	int iternum = 1;
 	
 	// reset write file
-	outfile = fopen(argv[1], "w");
+	outfile = fopen(argv[1], "w");//make sure the file exists so remove() doesnt cause an error
 	fclose(outfile);
 	remove(argv[1]);
 	
@@ -21,10 +42,10 @@ int main(int argc, char* argv[]) {
 	// open read file (brainfuck)
 	infile = fopen(argv[2], "r");
 	
-	// get starter code for the assembly (defining main function, etc)
+	// write starter code for the assembly (defining main function, etc)
 	fprintf(outfile, "section .text\nglobal _start\n_start:\n\tinc rsp");
 	
-	// get the rest of the code (what is actually from the brainfuck coode)
+	// write the body of the code (what is actually compiled from the brainfuck coode)
 	givenchar = fgetc(infile);
 	do {
 		lastchar = givenchar;
@@ -85,11 +106,13 @@ int main(int argc, char* argv[]) {
 				}
 				break;
 			case '[': // begin loop
-				jmpnum++;
-				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tje ej%i\n\tbj%i:", jmpnum, jmpnum);
+				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tje ej%i\n\tbj%i:\n\t", bjmpnum, bjmpnum);
+				push(&ejmpstack, bjmpnum);
+				bjmpnum++;
 				break;
 			case ']':
-				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tjnz bj%i\n\tej%i:", jmpnum, jmpnum);
+				ejmpnum = pop(&ejmpstack);
+				fprintf(outfile, "\n\tcmp byte [rsp], 0\n\tjnz bj%i\n\tej%i:\n\t", ejmpnum, ejmpnum);
 				break;
 			default:
 				break;

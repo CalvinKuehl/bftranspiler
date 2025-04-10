@@ -21,6 +21,7 @@ eloop	db	10,9,"cmp byte [rsp], 0",10,9,"jnz bj#",10,9,"ej#:"
 section .text
 global _start
 _start:
+<<<<<<< HEAD
 	; make sure the output file exists 
 	mov	rdi,	ofN	;const char *filename
 	mov	rdx,	[ofM]	;open mode (read + write)
@@ -49,3 +50,32 @@ _start:
 	; exit syscall
 	mov	rax,	0x3c	;sys_exit call number
 	syscall
+=======
+	inc rsp
+	cmp byte [rsp], 0
+	je ej0
+	bj0:
+	
+	cmp byte [rsp], 0
+	je ej1
+	bj1:
+	
+	cmp byte [rsp], 0
+	jnz bj1
+	ej1:
+	
+	cmp byte [rsp], 0
+	je ej2
+	bj2:
+	
+	cmp byte [rsp], 0
+	jnz bj2
+	ej2:
+	
+	cmp byte [rsp], 0
+	jnz bj0
+	ej0:
+	
+	mov rax, 0x3c
+	syscall
+>>>>>>> refs/remotes/origin/main
