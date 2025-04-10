@@ -1,3 +1,3 @@
 all:
-	nasm -f elf64 -o asm.o main.asm
+	nasm -f elf64 -o asm.o asm.asm
 	ld -o asm asm.o
