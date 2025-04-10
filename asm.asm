@@ -1,4 +1,8 @@
 section .text
 global _start
 _start:
-	inc rs
+	inc rsp
+	inc rsp
+	dec rsp;
+	mov rax, 0x3c
+	syscall
